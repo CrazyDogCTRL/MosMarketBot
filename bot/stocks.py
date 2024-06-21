@@ -2,21 +2,19 @@ import sqlite3
 from telebot import TeleBot
 from database.portfolio_db import db_path
 
-
-def add_stock(user_id, purchase_price, purchase_date, quantity, nominal_value=None, name=None):
+def add_stock(user_id, purchase_price, purchase_date, quantity, name=None, ticker=None):
     try:
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        c.execute('''INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, nominal_value, name) 
+        c.execute('''INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, name, ticker) 
                      VALUES (?, 'stocks', ?, ?, ?, ?, ?)''',
-                  (user_id, purchase_price, purchase_date, quantity, nominal_value, name))
+                  (user_id, purchase_price, purchase_date, quantity, name, ticker))
         conn.commit()
         conn.close()
         return True
     except sqlite3.Error as e:
         print(f"Error adding stock: {e}")
         return False
-
 
 def delete_stock(user_id, name):
     try:
@@ -31,40 +29,46 @@ def delete_stock(user_id, name):
         print(f"Error deleting stock: {e}")
         return False
 
-
 def process_stock_price_step(message, bot: TeleBot):
     try:
+        if not message.text or message.text.strip() == '':
+            raise ValueError("Пустое или некорректное сообщение")
+
+        print(f"Введенный текст: {message.text}")
         price = float(message.text.replace(',', '.'))
+        print("Преобразование прошло успешно")
+
         bot.send_message(message.chat.id, "Введите дату покупки акции в формате ГГГГ-ММ-ДД:")
         bot.register_next_step_handler(message, process_stock_purchase_date_step, bot, price)
-    except ValueError:
+    except ValueError as e:
+        print(f'Ошибка преобразования: {e}')
         bot.send_message(message.chat.id, "Некорректная стоимость акции. Пожалуйста, введите число.")
-
 
 def process_stock_purchase_date_step(message, bot: TeleBot, price):
     date = message.text.strip()
     bot.send_message(message.chat.id, "Введите количество акций:")
     bot.register_next_step_handler(message, process_stock_quantity_step, bot, price, date)
 
-
 def process_stock_quantity_step(message, bot: TeleBot, price, date):
     try:
         quantity = int(message.text.strip())
-        bot.send_message(message.chat.id, "Введите номинальную стоимость акции (опционально, оставьте пустым, если нет):")
-        bot.register_next_step_handler(message, process_stock_nominal_step, bot, price, date, quantity)
+        bot.send_message(message.chat.id, "Введите название акции (опционально, введите 'empty' если нет):")
+        bot.register_next_step_handler(message, process_stock_name_step, bot, price, date, quantity)
     except ValueError:
         bot.send_message(message.chat.id, "Некорректное количество акций. Пожалуйста, введите целое число.")
 
+def process_stock_name_step(message, bot: TeleBot, price, date, quantity):
+    name = message.text.strip()
+    if name.lower() == 'empty':
+        name = None
+    bot.send_message(message.chat.id, "Введите тикер акции (опционально, введите 'empty' если нет):")
+    bot.register_next_step_handler(message, process_stock_ticker_step, bot, price, date, quantity, name)
 
-def process_stock_nominal_step(message, bot: TeleBot, price, date, quantity):
-    nominal = message.text.strip() if message.text.strip() else None
-    bot.send_message(message.chat.id, "Введите название акции (опционально):")
-    bot.register_next_step_handler(message, lambda msg: process_stock_name_step(msg, bot, price, date, quantity, nominal))
-
-
-def process_stock_name_step(message, bot: TeleBot, price, date, quantity, nominal):
-    name = message.text.strip() if message.text.strip() else None
-    if add_stock(message.chat.id, price, date, quantity, nominal_value=nominal, name=name):
+def process_stock_ticker_step(message, bot: TeleBot, price, date, quantity, name):
+    ticker = message.text.strip()
+    if ticker.lower() == 'empty':
+        ticker = None
+    if add_stock(message.chat.id, price, date, quantity, name=name, ticker=ticker):
         bot.send_message(message.chat.id, "Акция успешно добавлена в портфель!")
     else:
         bot.send_message(message.chat.id, "Произошла ошибка при добавлении акции. Пожалуйста, попробуйте позже.")

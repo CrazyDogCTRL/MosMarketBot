@@ -36,7 +36,7 @@ def handle_text(message):
     elif message.text == "Добавить акцию":
         if check_portfolio_exists(message.chat.id):
             bot.send_message(message.chat.id, "Введите стоимость покупки акции:")
-            bot.register_next_step_handler(message, process_stock_price_step(message, bot))
+            bot.register_next_step_handler(message, process_stock_price_step, bot)
         else:
             bot.send_message(message.chat.id, "У вас нет портфеля для добавления акции.")
     elif message.text == "Удалить акцию":
@@ -48,7 +48,7 @@ def handle_text(message):
     elif message.text == "Добавить облигацию":
         if check_portfolio_exists(message.chat.id):
             bot.send_message(message.chat.id, "Введите стоимость покупки облигации:")
-            bot.register_next_step_handler(message, process_bond_price_step)
+            bot.register_next_step_handler(message, process_bond_price_step, bot)
         else:
             bot.send_message(message.chat.id, "У вас нет портфеля для добавления облигации.")
     elif message.text == "Удалить облигацию":
