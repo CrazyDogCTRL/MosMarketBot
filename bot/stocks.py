@@ -1,6 +1,7 @@
 import sqlite3
 from telebot import TeleBot
 from database.portfolio_db import db_path
+import requests
 
 
 def add_stock(user_id, purchase_price, purchase_date, quantity, name=None, ticker=None):
@@ -80,3 +81,31 @@ def process_stock_ticker_step(message, bot: TeleBot, price, date, quantity, name
         bot.send_message(message.chat.id, "Акция успешно добавлена в портфель!")
     else:
         bot.send_message(message.chat.id, "Произошла ошибка при добавлении акции. Пожалуйста, попробуйте позже.")
+
+
+def get_current_price(ticker):
+    url = f'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/{ticker}.json'
+    response = requests.get(url)
+    print(response)
+    data = response.json()
+    marketdata = data.get('marketdata')
+
+    if not marketdata:
+        raise ValueError("Секция 'marketdata' не найдена в данных.")
+
+    # Ищем индекс колонки 'LAST' в 'marketdata'
+    columns = marketdata.get('columns', [])
+    if 'LAST' not in columns:
+        raise ValueError("Колонка 'LAST' не найдена в секции 'marketdata'.")
+
+    last_index = columns.index('LAST')
+
+    # Получаем данные из 'marketdata'
+    market_data = marketdata.get('data', [])
+    if not market_data:
+        raise ValueError("Данные 'marketdata' отсутствуют.")
+
+    # Извлекаем значение 'LAST' (текущую цену) из первого набора данных
+    current_price = market_data[0][last_index]
+
+    return current_price
