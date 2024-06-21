@@ -2,9 +2,12 @@ import telebot
 import requests
 from datetime import datetime
 from telebot import types
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 # Токен вашего телеграм-бота
-TOKEN = '6969605692:AAGjOdUYxj00QWlOlK35wnBbVIcmxXo4Qes'
+TOKEN = os.getenv('BOT_TOKEN')
 bot = telebot.TeleBot(TOKEN)
 
 # Словарь для хранения информации о портфелях пользователей
