@@ -1,7 +1,7 @@
 import sqlite3
 from telebot import TeleBot
 from database.portfolio_db import db_path
-from database.start import bot
+
 
 def add_bond(user_id, purchase_price, purchase_date, quantity, nominal_value=None, maturity_date=None, dividend=None, name=None):
     try:

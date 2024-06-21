@@ -2,7 +2,7 @@ import telebot
 import os
 from dotenv import load_dotenv
 from telebot import types
-from portfolio_db import create_portfolio, delete_portfolio, check_portfolio_exists
+from database.portfolio_db import create_portfolio, delete_portfolio, check_portfolio_exists
 from bot.stocks import *
 from bot.bonds import *
 
