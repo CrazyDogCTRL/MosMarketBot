@@ -22,7 +22,8 @@ def initialize_database():
                 nominal_value DECIMAL(10, 2),
                 maturity_date DATE,
                 dividend DECIMAL(10, 2),
-                name TEXT
+                name TEXT,
+                ticker TEXT
             )
         ''')
 
@@ -56,8 +57,8 @@ def create_portfolio(user_id):
 
         # Вставка данных о портфеле
         cursor.execute('''
-            INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name)
-            VALUES (?, '', 0.0, '', 0, 0.0, '', 0.0, '')
+            INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name, ticker)
+            VALUES (?, '', 0.0, '', 0, 0.0, '', 0.0, '', '')
         ''', (user_id,))
 
         conn.commit()
@@ -92,17 +93,17 @@ def delete_portfolio(user_id):
 
 
 def add_asset(user_id, asset_type, purchase_price, purchase_date, quantity, nominal_value=None, maturity_date=None,
-              dividend=None, name=None):
+              dividend=None, name=None, ticker=None):
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
         # Вставка данных об активе в портфель пользователя
         cursor.execute('''
-            INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name, ticker)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-        user_id, asset_type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name))
+        user_id, asset_type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name, ticker))
 
         conn.commit()
         conn.close()
