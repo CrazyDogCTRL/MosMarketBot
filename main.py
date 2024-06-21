@@ -1,3 +1,5 @@
+import json
+
 import telebot
 import requests
 from datetime import datetime
@@ -14,15 +16,32 @@ bot = telebot.TeleBot(TOKEN)
 user_portfolios = {}
 
 # Получение текущей цены акции с Московской биржи
-def get_stock_price(ticker):
-    try:
-        url = f'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/{ticker}.json'
-        response = requests.get(url)
-        data = response.json()
-        last_price = data['marketdata']['data'][0][8]  # Индекс 8 соответствует последней цене
-        return last_price
-    except Exception as e:
-        return None
+def get_current_price(ticker):
+    url = f'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/{ticker}.json'
+    response = requests.get(url)
+    print(response)
+    data = response.json()
+    marketdata = data.get('marketdata')
+
+    if not marketdata:
+        raise ValueError("Секция 'marketdata' не найдена в данных.")
+
+    # Ищем индекс колонки 'LAST' в 'marketdata'
+    columns = marketdata.get('columns', [])
+    if 'LAST' not in columns:
+        raise ValueError("Колонка 'LAST' не найдена в секции 'marketdata'.")
+
+    last_index = columns.index('LAST')
+
+    # Получаем данные из 'marketdata'
+    market_data = marketdata.get('data', [])
+    if not market_data:
+        raise ValueError("Данные 'marketdata' отсутствуют.")
+
+    # Извлекаем значение 'LAST' (текущую цену) из первого набора данных
+    current_price = market_data[0][last_index]
+
+    return current_price
 
 # Команда старт
 @bot.message_handler(commands=["start"])
@@ -83,7 +102,7 @@ def view_portfolio(message):
     for stock in user_portfolios[user_id]:
         ticker = stock["ticker"]
         initial_price = stock["price"]
-        current_price = get_stock_price(ticker)
+        current_price = get_current_price(ticker)
         if current_price is not None:
             change = (current_price - initial_price) / initial_price * 100
             response_message += f"{ticker}: покупка по {initial_price} руб., текущая цена {current_price} руб., изменение {change:.2f}%\n"
@@ -102,7 +121,7 @@ def view_portfolio(message):
 # Получение текущей цены акции
 def current_stock_price(message):
     ticker = message.text.upper()
-    current_price = get_stock_price(ticker)
+    current_price = get_current_price(ticker)
     if current_price is not None:
         bot.send_message(message.chat.id, f"Текущая цена акции {ticker}: {current_price} руб.")
     else:
