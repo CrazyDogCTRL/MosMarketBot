@@ -16,13 +16,7 @@ bot = telebot.TeleBot(TOKEN)
 def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     item1 = types.KeyboardButton("Создать портфель")
-    item2 = types.KeyboardButton("Добавить акцию")
-    item3 = types.KeyboardButton("Удалить акцию")
-    item4 = types.KeyboardButton("Добавить облигацию")
-    item5 = types.KeyboardButton("Удалить облигацию")
-    markup.row(item1)
-    markup.row(item2, item3)
-    markup.row(item4, item5)
+    markup.add(item1)
     bot.send_message(message.chat.id, 'Добро пожаловать в наш телеграмм бот!', reply_markup=markup)
 
 @bot.message_handler(content_types=["text"])
@@ -31,8 +25,18 @@ def handle_text(message):
         if not check_portfolio_exists(message.chat.id):
             create_portfolio(message.chat.id)
             bot.send_message(message.chat.id, "Портфель успешно создан!")
+            show_main_menu(message)
         else:
             bot.send_message(message.chat.id, "У вас уже есть портфель.")
+            show_main_menu(message)
+    elif message.text == "Посмотреть портфель":
+        print('info_portfolio(message)')
+    elif message.text == "Управление портфелем":
+        show_portfolio_management_menu(message)
+    elif message.text == "Получить портфель в виде таблицы":
+        print('give_table(message)')
+    elif message.text == "Получить граф":
+        print('give_graph(message)')
     elif message.text == "Добавить акцию":
         if check_portfolio_exists(message.chat.id):
             bot.send_message(message.chat.id, "Введите стоимость покупки акции:")
@@ -57,6 +61,27 @@ def handle_text(message):
             bot.register_next_step_handler(message, delete_bond)
         else:
             bot.send_message(message.chat.id, "У вас нет портфеля для удаления облигаций.")
+
+def show_main_menu(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    item1 = types.KeyboardButton("Посмотреть портфель")
+    item2 = types.KeyboardButton("Управление портфелем")
+    item3 = types.KeyboardButton("Получить портфель в виде таблицы")
+    item4 = types.KeyboardButton("Получить граф")
+    markup.row(item1)
+    markup.row(item2)
+    markup.row(item3, item4)
+    bot.send_message(message.chat.id, 'Выберите действие:', reply_markup=markup)
+
+def show_portfolio_management_menu(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    item1 = types.KeyboardButton("Добавить акцию")
+    item2 = types.KeyboardButton("Удалить акцию")
+    item3 = types.KeyboardButton("Добавить облигацию")
+    item4 = types.KeyboardButton("Удалить облигацию")
+    markup.row(item1, item2)
+    markup.row(item3, item4)
+    bot.send_message(message.chat.id, 'Управление портфелем:', reply_markup=markup)
 
 # Запуск бота
 if __name__ == "__main__":
