@@ -2,8 +2,10 @@ import sqlite3
 from telebot import TeleBot
 from database.portfolio_db import db_path
 
+
 def add_stock(user_id, purchase_price, purchase_date, quantity, name=None, ticker=None):
     try:
+        print(user_id)
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute('''INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, name, ticker) 
@@ -15,6 +17,7 @@ def add_stock(user_id, purchase_price, purchase_date, quantity, name=None, ticke
     except sqlite3.Error as e:
         print(f"Error adding stock: {e}")
         return False
+
 
 def delete_stock(user_id, name):
     try:
@@ -28,6 +31,7 @@ def delete_stock(user_id, name):
     except sqlite3.Error as e:
         print(f"Error deleting stock: {e}")
         return False
+
 
 def process_stock_price_step(message, bot: TeleBot):
     try:
@@ -44,10 +48,12 @@ def process_stock_price_step(message, bot: TeleBot):
         print(f'Ошибка преобразования: {e}')
         bot.send_message(message.chat.id, "Некорректная стоимость акции. Пожалуйста, введите число.")
 
+
 def process_stock_purchase_date_step(message, bot: TeleBot, price):
     date = message.text.strip()
     bot.send_message(message.chat.id, "Введите количество акций:")
     bot.register_next_step_handler(message, process_stock_quantity_step, bot, price, date)
+
 
 def process_stock_quantity_step(message, bot: TeleBot, price, date):
     try:
@@ -57,12 +63,14 @@ def process_stock_quantity_step(message, bot: TeleBot, price, date):
     except ValueError:
         bot.send_message(message.chat.id, "Некорректное количество акций. Пожалуйста, введите целое число.")
 
+
 def process_stock_name_step(message, bot: TeleBot, price, date, quantity):
     name = message.text.strip()
     if name.lower() == 'empty':
         name = None
     bot.send_message(message.chat.id, "Введите тикер акции (опционально, введите 'empty' если нет):")
     bot.register_next_step_handler(message, process_stock_ticker_step, bot, price, date, quantity, name)
+
 
 def process_stock_ticker_step(message, bot: TeleBot, price, date, quantity, name):
     ticker = message.text.strip()

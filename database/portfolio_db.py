@@ -130,6 +130,32 @@ def rename_asset(user_id, new_name):
         print(f"Error renaming asset: {e}")
         return False
 
+def get_portfolio(user_id):
+    try:
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute('''SELECT purchase_price, purchase_date, quantity, name, ticker
+                     FROM portfolio
+                     WHERE id_user = ? AND type = 'stocks' ''', (user_id,))
+        portfolio = {}
+        rows = c.fetchall()
+        # Нумерация с 1
+        for index, row in enumerate(rows, start=1):
+            portfolio[index] = {
+                'purchase_price': row[0],
+                'purchase_date': row[1],
+                'quantity': row[2],
+                'name': row[3],
+                'ticker': row[4]
+            }
+        conn.close()
+        return portfolio
+    except sqlite3.Error as e:
+        print(f"Error retrieving portfolio: {e}")
+        return None
+
 
 # Вызываем инициализацию базы данных при импорте модуля
 initialize_database()
+
+print(get_portfolio(986804319))
