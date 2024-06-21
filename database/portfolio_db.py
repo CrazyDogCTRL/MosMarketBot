@@ -155,7 +155,39 @@ def get_portfolio(user_id):
         return None
 
 
+def generate_portfolio_message_for_user(user_id):
+    portfolio = get_portfolio(user_id)
+
+    if not portfolio:
+        return "Ваш портфель пуст или произошла ошибка при получении данных."
+
+    message = "Ваш портфель (первые 5 акций):\n"
+    total_value = 0
+    count = 0
+
+    # Считаем общую стоимость портфеля и формируем сообщение для первых 5 акций
+    for stock_id, stock_data in portfolio.items():
+        total_value += stock_data['purchase_price'] * stock_data['quantity']
+
+    for index, (stock_id, stock_data) in enumerate(portfolio.items(), start=1):
+        if index > 5:
+            break
+        message += (
+            f"\nАкция {index}:\n"
+            f"Название: {stock_data['name'] if stock_data['name'] else 'Не указано'}\n"
+            f"Тикер: {stock_data['ticker'] if stock_data['ticker'] else 'Не указан'}\n"
+            f"Цена покупки: {stock_data['purchase_price']}\n"
+            f"Дата покупки: {stock_data['purchase_date']}\n"
+            f"Количество: {stock_data['quantity']}\n"
+            f"Стоимость: {stock_data['purchase_price'] * stock_data['quantity']}\n"
+        )
+
+    message += f"\nИтоговая стоимость всего портфеля: {total_value}"
+    return message
+
+
 # Вызываем инициализацию базы данных при импорте модуля
 initialize_database()
 
-print(get_portfolio(986804319))
+# Debug
+# print(generate_portfolio_message_for_user(986804319))
