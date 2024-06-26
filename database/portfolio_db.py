@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import requests
 
 # Путь к файлу базы данных SQLite
 db_path = os.path.join(os.path.dirname(__file__), 'portfolio_db.sqlite')
@@ -23,7 +24,8 @@ def initialize_database():
                 maturity_date DATE,
                 dividend DECIMAL(10, 2),
                 name TEXT,
-                ticker TEXT
+                ticker TEXT,
+                exist BOOLEAN DEFAULT 0  -- Добавляем столбец exist
             )
         ''')
 
@@ -91,7 +93,6 @@ def delete_portfolio(user_id):
         print(f"Error deleting portfolio: {e}")
         return False
 
-
 def add_asset(user_id, asset_type, purchase_price, purchase_date, quantity, nominal_value=None, maturity_date=None,
               dividend=None, name=None, ticker=None):
     try:
@@ -100,10 +101,11 @@ def add_asset(user_id, asset_type, purchase_price, purchase_date, quantity, nomi
 
         # Вставка данных об активе в портфель пользователя
         cursor.execute('''
-            INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name, ticker)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name, ticker, exist)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-        user_id, asset_type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name, ticker))
+            user_id, asset_type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name,
+            ticker, stock_exists))
 
         conn.commit()
         conn.close()
@@ -129,6 +131,7 @@ def rename_asset(user_id, new_name):
     except Exception as e:
         print(f"Error renaming asset: {e}")
         return False
+
 
 def get_portfolio(user_id):
     try:
@@ -191,3 +194,4 @@ initialize_database()
 
 # Debug
 # print(generate_portfolio_message_for_user(986804319))
+# print(check_stock_exists_on_moex("ABIO1"))

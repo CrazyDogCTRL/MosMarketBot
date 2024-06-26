@@ -4,14 +4,34 @@ from database.portfolio_db import db_path
 import requests
 
 
+def check_stock_exists_on_moex(ticker):
+    try:
+        url = f"https://iss.moex.com/iss/securities/{ticker}.json"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            # Проверяем наличие данных в ключе "data"
+            if data.get("description", {}).get("data", []):
+                return True
+            else:
+                return False
+        else:
+            return False
+    except Exception as e:
+        print(f"Error checking stock existence: {e}")
+        return False
+
+
 def add_stock(user_id, purchase_price, purchase_date, quantity, name=None, ticker=None):
     try:
         print(user_id)
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        c.execute('''INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, name, ticker) 
-                     VALUES (?, 'stocks', ?, ?, ?, ?, ?)''',
-                  (user_id, purchase_price, purchase_date, quantity, name, ticker))
+        exist = str(check_stock_exists_on_moex(ticker))
+        c.execute('''INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, name, ticker, exist) 
+                     VALUES (?, 'stocks', ?, ?, ?, ?, ?, ?)''',
+                  (user_id, purchase_price, purchase_date, quantity, name, ticker, exist))
         conn.commit()
         conn.close()
         return True

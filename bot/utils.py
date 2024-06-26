@@ -7,16 +7,20 @@ from dotenv import load_dotenv
 from database.portfolio_db import db_path
 import os
 from start import bot
+
 load_dotenv()
 moscow_exchange_url = "https://iss.moex.com/iss/engines/stock/markets/shares/securities/{}.json"
+
 
 def get_portfolio(user_id):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute("SELECT name, type, purchase_date, purchase_price, ticker FROM portfolio WHERE id_user = ?", (user_id,))
+    cursor.execute("SELECT name, type, purchase_date, purchase_price, ticker FROM portfolio WHERE id_user = ?",
+                   (user_id,))
     portfolio = cursor.fetchall()
     conn.close()
     return portfolio
+
 
 def get_current_price(ticker):
     url = f'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/{ticker}.json'
@@ -43,6 +47,7 @@ def get_current_price(ticker):
     except (requests.RequestException, ValueError, KeyError):
         return None
 
+
 def create_excel(user_id, save_path='.'):
     portfolio = get_portfolio(user_id)
     if not portfolio:
@@ -62,7 +67,8 @@ def create_excel(user_id, save_path='.'):
         link = f"https://www.moex.com/ru/issue.aspx?code={ticker}"
         data.append([name, type_, purchase_date, purchase_price, current_price, change, ticker, link])
 
-    columns = ["Имя", "Тип", "Дата покупки", "Цена покупки", "Текущая цена", "Изменение (%)", "Тикер", "Ссылка на Московскую биржу"]
+    columns = ["Имя", "Тип", "Дата покупки", "Цена покупки", "Текущая цена", "Изменение (%)", "Тикер",
+               "Ссылка на Московскую биржу"]
     df = pd.DataFrame(data, columns=columns)
 
     wb = Workbook()
@@ -81,8 +87,9 @@ def create_excel(user_id, save_path='.'):
 
 def send_portfolio_as_excel(message):
     try:
-        save_directory = '/Users/crazydogctrl/PycharmProjects/TGbotMosBirga'
-        file_path = create_excel(message.chat.id, save_path=save_directory)
+        # Определение текущей директории, где находится скрипт
+        script_directory = os.path.dirname(os.path.abspath(__file__))
+        file_path = create_excel(message.chat.id, save_path=script_directory)
         if file_path is None:
             bot.send_message(message.chat.id, "Произошла ошибка при создании Excel файла.")
             return
@@ -94,7 +101,7 @@ def send_portfolio_as_excel(message):
 
 
 # Пример вызова функции
-user_id = 730171729
-print("hello")
-save_directory = '/Users/crazydogctrl/PycharmProjects/TGbotMosBirga'
-create_excel(user_id, save_path=save_directory)
+# user_id = 730171729
+# print("hello")
+# save_directory = os.path.dirname(os.path.abspath(__file__))
+# create_excel(user_id, save_path=save_directory)

@@ -2,7 +2,7 @@ import telebot
 import os
 from dotenv import load_dotenv
 from telebot import types
-from database.portfolio_db import create_portfolio, delete_portfolio, check_portfolio_exists
+from database.portfolio_db import *
 from bot.stocks import *
 from bot.bonds import *
 from bot.utils import *
@@ -33,13 +33,13 @@ def handle_text(message):
             bot.send_message(message.chat.id, "У вас уже есть портфель.")
             show_main_menu(message)
     elif message.text == "Посмотреть портфель":
-        print('info_portfolio(message)')
+        bot.send_message(message.chat.id, generate_portfolio_message_for_user(message.chat.id))
     elif message.text == "Управление портфелем":
         show_portfolio_management_menu(message)
     elif message.text == "Получить портфель в виде таблицы":
         send_portfolio_as_excel(message)
     elif message.text == "Получить график":
-        print('give_graph(message)')
+        show_graph_menu(message)
     elif message.text == "Добавить акцию":
         if check_portfolio_exists(message.chat.id):
             bot.send_message(message.chat.id, "Введите стоимость покупки акции:")
@@ -68,6 +68,18 @@ def handle_text(message):
         show_main_menu(message)
     elif message.text == "Назад к управлению портфелем":
         show_portfolio_management_menu(message)
+
+
+def show_graph_menu(message):
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    button_growth_graph = types.KeyboardButton("График общего роста")
+    button_yield_graph = types.KeyboardButton("График доходности")
+    button_weighted_yield_graph = types.KeyboardButton("График взвешенной доходности")
+    button_portfolio_volatility_graph = types.KeyboardButton("График волатильности портфеля")
+    button_back = types.KeyboardButton("Назад к главному меню")
+    keyboard.add(button_growth_graph, button_yield_graph, button_weighted_yield_graph,
+                 button_portfolio_volatility_graph, button_back)
+    bot.send_message(message.chat.id, "Выберите тип графика:", reply_markup=keyboard)
 
 
 def show_main_menu(message):
