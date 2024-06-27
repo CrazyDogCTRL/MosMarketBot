@@ -1,7 +1,7 @@
 import sqlite3
 import os
 import requests
-
+from start import *
 # Путь к файлу базы данных SQLite
 db_path = os.path.join(os.path.dirname(__file__), 'portfolio_db.sqlite')
 
@@ -98,7 +98,7 @@ def add_asset(user_id, asset_type, purchase_price, purchase_date, quantity, nomi
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-
+        stock_exists = True
         # Вставка данных об активе в портфель пользователя
         cursor.execute('''
             INSERT INTO portfolio (id_user, type, purchase_price, purchase_date, quantity, nominal_value, maturity_date, dividend, name, ticker, exist)
@@ -114,6 +114,35 @@ def add_asset(user_id, asset_type, purchase_price, purchase_date, quantity, nomi
     except Exception as e:
         print(f"Error adding asset: {e}")
         return False
+
+
+def handle_portfolio_management(message):
+    if message.text == "Добавить акцию":
+        if check_portfolio_exists(message.chat.id):
+            bot.send_message(message.chat.id, "Введите стоимость покупки акции:")
+            bot.register_next_step_handler(message, process_stock_price_step, bot)
+        else:
+            bot.send_message(message.chat.id, "У вас нет портфеля для добавления акции.")
+    elif message.text == "Удалить акцию":
+        if check_portfolio_exists(message.chat.id):
+            bot.send_message(message.chat.id, "Введите название акции для удаления:")
+            bot.register_next_step_handler(message, delete_stock)
+        else:
+            bot.send_message(message.chat.id, "У вас нет портфеля для удаления акций.")
+    elif message.text == "Добавить облигацию":
+        if check_portfolio_exists(message.chat.id):
+            bot.send_message(message.chat.id, "Введите стоимость покупки облигации:")
+            bot.register_next_step_handler(message, process_bond_price_step, bot)
+        else:
+            bot.send_message(message.chat.id, "У вас нет портфеля для добавления облигации.")
+    elif message.text == "Удалить облигацию":
+        if check_portfolio_exists(message.chat.id):
+            bot.send_message(message.chat.id, "Введите название облигации для удаления:")
+            bot.register_next_step_handler(message, delete_bond)
+        else:
+            bot.send_message(message.chat.id, "У вас нет портфеля для удаления облигаций.")
+    elif message.text == "Назад к управлению портфелем":
+        show_portfolio_management_menu(message)
 
 
 def rename_asset(user_id, new_name):

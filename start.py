@@ -1,5 +1,6 @@
 import telebot
 import os
+import time
 from dotenv import load_dotenv
 from telebot import types
 from database.portfolio_db import *
@@ -38,48 +39,10 @@ def handle_text(message):
         show_portfolio_management_menu(message)
     elif message.text == "Получить портфель в виде таблицы":
         send_portfolio_as_excel(message)
-    elif message.text == "Получить график":
-        show_graph_menu(message)
-    elif message.text == "Добавить акцию":
-        if check_portfolio_exists(message.chat.id):
-            bot.send_message(message.chat.id, "Введите стоимость покупки акции:")
-            bot.register_next_step_handler(message, process_stock_price_step, bot)
-        else:
-            bot.send_message(message.chat.id, "У вас нет портфеля для добавления акции.")
-    elif message.text == "Удалить акцию":
-        if check_portfolio_exists(message.chat.id):
-            bot.send_message(message.chat.id, "Введите название акции для удаления:")
-            bot.register_next_step_handler(message, delete_stock)
-        else:
-            bot.send_message(message.chat.id, "У вас нет портфеля для удаления акций.")
-    elif message.text == "Добавить облигацию":
-        if check_portfolio_exists(message.chat.id):
-            bot.send_message(message.chat.id, "Введите стоимость покупки облигации:")
-            bot.register_next_step_handler(message, process_bond_price_step, bot)
-        else:
-            bot.send_message(message.chat.id, "У вас нет портфеля для добавления облигации.")
-    elif message.text == "Удалить облигацию":
-        if check_portfolio_exists(message.chat.id):
-            bot.send_message(message.chat.id, "Введите название облигации для удаления:")
-            bot.register_next_step_handler(message, delete_bond)
-        else:
-            bot.send_message(message.chat.id, "У вас нет портфеля для удаления облигаций.")
     elif message.text == "Назад к главному меню":
         show_main_menu(message)
-    elif message.text == "Назад к управлению портфелем":
-        show_portfolio_management_menu(message)
-
-
-def show_graph_menu(message):
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    button_growth_graph = types.KeyboardButton("График общего роста")
-    button_yield_graph = types.KeyboardButton("График доходности")
-    button_weighted_yield_graph = types.KeyboardButton("График взвешенной доходности")
-    button_portfolio_volatility_graph = types.KeyboardButton("График волатильности портфеля")
-    button_back = types.KeyboardButton("Назад к главному меню")
-    keyboard.add(button_growth_graph, button_yield_graph, button_weighted_yield_graph,
-                 button_portfolio_volatility_graph, button_back)
-    bot.send_message(message.chat.id, "Выберите тип графика:", reply_markup=keyboard)
+    else:
+        handle_portfolio_management(message)
 
 
 def show_main_menu(message):
@@ -87,11 +50,9 @@ def show_main_menu(message):
     item1 = types.KeyboardButton("Посмотреть портфель")
     item2 = types.KeyboardButton("Управление портфелем")
     item3 = types.KeyboardButton("Получить портфель в виде таблицы")
-    item4 = types.KeyboardButton("Получить график")
-    item_back = types.KeyboardButton("Назад к главному меню")
     markup.row(item1)
     markup.row(item2)
-    markup.row(item3, item4)
+    markup.row(item3)
     bot.send_message(message.chat.id, 'Выберите действие:', reply_markup=markup)
 
 
@@ -108,6 +69,14 @@ def show_portfolio_management_menu(message):
     bot.send_message(message.chat.id, 'Управление портфелем:', reply_markup=markup)
 
 
-# Запуск бота
+def main():
+    while True:
+        try:
+            bot.polling(none_stop=True, interval=0)
+        except Exception as e:
+            print(f"Error: {e}")
+            time.sleep(5)
+
+
 if __name__ == "__main__":
-    bot.polling(none_stop=True, interval=0)
+    main()
