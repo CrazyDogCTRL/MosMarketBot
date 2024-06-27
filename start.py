@@ -3,10 +3,10 @@ import os
 import time
 from dotenv import load_dotenv
 from telebot import types
-from database.portfolio_db import *
 from bot.stocks import *
 from bot.bonds import *
 from bot.utils import *
+from database.portfolio_db import *
 
 load_dotenv()
 
@@ -68,6 +68,34 @@ def show_portfolio_management_menu(message):
     markup.row(item_back)
     bot.send_message(message.chat.id, 'Управление портфелем:', reply_markup=markup)
 
+def handle_portfolio_management(message):
+    if message.text == "Добавить акцию":
+        if check_portfolio_exists(message.chat.id):
+            bot.send_message(message.chat.id, "Введите стоимость покупки акции:")
+            bot.register_next_step_handler(message, process_stock_price_step, bot)
+        else:
+            bot.send_message(message.chat.id, "У вас нет портфеля для добавления акции.")
+    elif message.text == "Удалить акцию":
+        if check_portfolio_exists(message.chat.id):
+            bot.send_message(message.chat.id, "Введите название акции для удаления:")
+            bot.register_next_step_handler(message, delete_stock)
+        else:
+            bot.send_message(message.chat.id, "У вас нет портфеля для удаления акций.")
+    elif message.text == "Добавить облигацию":
+        if check_portfolio_exists(message.chat.id):
+            bot.send_message(message.chat.id, "Введите стоимость покупки облигации:")
+            bot.register_next_step_handler(message, process_bond_price_step, bot)
+        else:
+            bot.send_message(message.chat.id, "У вас нет портфеля для добавления облигации.")
+    elif message.text == "Удалить облигацию":
+        if check_portfolio_exists(message.chat.id):
+            bot.send_message(message.chat.id, "Введите название облигации для удаления:")
+            bot.register_next_step_handler(message, delete_bond)
+        else:
+            bot.send_message(message.chat.id, "У вас нет портфеля для удаления облигаций.")
+    elif message.text == "Назад к управлению портфелем":
+        show_portfolio_management_menu(message)
+
 
 def main():
     while True:
@@ -80,3 +108,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

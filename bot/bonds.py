@@ -2,6 +2,7 @@ import sqlite3
 from telebot import TeleBot
 from database.portfolio_db import db_path
 
+
 def add_bond(user_id, purchase_price, purchase_date, quantity, nominal_value=None, maturity_date=None, dividend=None, name=None, ticker=None):
     try:
         conn = sqlite3.connect(db_path)
@@ -16,6 +17,7 @@ def add_bond(user_id, purchase_price, purchase_date, quantity, nominal_value=Non
         print(f"Error adding bond: {e}")
         return False
 
+
 def delete_bond(user_id, name):
     try:
         conn = sqlite3.connect(db_path)
@@ -29,6 +31,7 @@ def delete_bond(user_id, name):
         print(f"Error deleting bond: {e}")
         return False
 
+
 def process_bond_price_step(message, bot):
     try:
         price = float(message.text.replace(',', '.'))
@@ -37,10 +40,12 @@ def process_bond_price_step(message, bot):
     except ValueError:
         bot.send_message(message.chat.id, "Некорректная стоимость облигации. Пожалуйста, введите число.")
 
+
 def process_bond_purchase_date_step(message, bot: TeleBot, price):
     date = message.text.strip()
     bot.send_message(message.chat.id, "Введите количество облигаций:")
     bot.register_next_step_handler(message, process_bond_quantity_step, bot, price, date)
+
 
 def process_bond_quantity_step(message, bot: TeleBot, price, date):
     try:
@@ -50,25 +55,30 @@ def process_bond_quantity_step(message, bot: TeleBot, price, date):
     except ValueError:
         bot.send_message(message.chat.id, "Некорректное количество облигаций. Пожалуйста, введите целое число.")
 
+
 def process_bond_nominal_step(message, bot: TeleBot, price, date, quantity):
     nominal = message.text.strip() if message.text.strip() else None
     bot.send_message(message.chat.id, "Введите дату погашения облигации в формате ГГГГ-ММ-ДД (опционально):")
     bot.register_next_step_handler(message, process_bond_maturity_date_step, bot, price, date, quantity, nominal)
+
 
 def process_bond_maturity_date_step(message, bot: TeleBot, price, date, quantity, nominal):
     maturity_date = message.text.strip() if message.text.strip() else None
     bot.send_message(message.chat.id, "Введите размер дивиденда (опционально):")
     bot.register_next_step_handler(message, process_bond_dividend_step, bot, price, date, quantity, nominal, maturity_date)
 
+
 def process_bond_dividend_step(message, bot: TeleBot, price, date, quantity, nominal, maturity_date):
     dividend = message.text.strip() if message.text.strip() else None
     bot.send_message(message.chat.id, "Введите название облигации (опционально):")
     bot.register_next_step_handler(message, lambda msg: process_bond_name_step(msg, bot, price, date, quantity, nominal, maturity_date, dividend))
 
+
 def process_bond_name_step(message, bot: TeleBot, price, date, quantity, nominal, maturity_date, dividend):
     name = message.text.strip() if message.text.strip() else None
     bot.send_message(message.chat.id, "Введите тикер облигации:")
     bot.register_next_step_handler(message, lambda msg: process_bond_ticker_step(msg, bot, price, date, quantity, nominal, maturity_date, dividend, name))
+
 
 def process_bond_ticker_step(message, bot: TeleBot, price, date, quantity, nominal, maturity_date, dividend, name):
     ticker = message.text.strip() if message.text.strip() else None

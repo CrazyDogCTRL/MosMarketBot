@@ -15,7 +15,7 @@ moscow_exchange_url = "https://iss.moex.com/iss/engines/stock/markets/shares/sec
 def get_portfolio(user_id):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute("SELECT name, type, purchase_date, purchase_price, ticker FROM portfolio WHERE id_user = ?",
+    cursor.execute("SELECT name, type, purchase_date, purchase_price, ticker FROM portfolio WHERE id_user = ? AND type IS NOT NULL",
                    (user_id,))
     portfolio = cursor.fetchall()
     conn.close()
